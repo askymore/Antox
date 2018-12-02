@@ -27,7 +27,8 @@ class ContactsFragment extends AbstractContactsFragment(showSearch = true, showF
 
   override def onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle): View = {
     val rootView = super.onCreateView(inflater, container, savedInstanceState)
-    rootView.findViewById(R.id.center_text).setVisibility(View.GONE)
+    //bugfix fix the "setVisibility(or other methods) is not a member of Nothing” error,which occurs in sdk 26 and above
+    rootView.findViewById(R.id.center_text).asInstanceOf[View].setVisibility(View.GONE)
     rootView
   }
 

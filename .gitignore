@@ -3,7 +3,7 @@ Thumbs.db
 
 
 # Top-level generated gradle build file
-/build.gradle
+#/build.gradle
 
 # built application files
 *.apk

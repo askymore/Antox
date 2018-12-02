@@ -1,2 +1,2 @@
-include ':app', ':PagerSlidingTabStrip'
+include ':app', ':PagerSlidingTabStrip', ':libzxing'
 project(':PagerSlidingTabStrip').projectDir = new File('app/libs/PagerSlidingTabStrip')
