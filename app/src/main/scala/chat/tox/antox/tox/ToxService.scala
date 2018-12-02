@@ -5,6 +5,8 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.preference.PreferenceManager
+import android.support.v4.app.NotificationCompat
+import chat.tox.antox.R
 import chat.tox.antox.av.CallService
 import chat.tox.antox.callbacks.{AntoxOnSelfConnectionStatusCallback, ToxCallbackListener, ToxavCallbackListener}
 import chat.tox.antox.utils.AntoxLog
@@ -12,6 +14,7 @@ import im.tox.tox4j.core.enums.ToxConnection
 import im.tox.tox4j.impl.jni.ToxJniLog
 import rx.lang.scala.schedulers.AndroidMainThreadScheduler
 import rx.lang.scala.{Observable, Subscription}
+
 import scala.concurrent.duration._
 
 class ToxService extends Service {
@@ -100,6 +103,16 @@ class ToxService extends Service {
 
     serviceThread = new Thread(start)
     serviceThread.start()
+
+//change request askymore-1
+//Todo :to keep connection alive ,put a notification still forground
+//    val builder=new NotificationCompat.Builder(this)
+//    builder.setContentTitle("Antox")
+//    builder.setPriority(NotificationCompat.PRIORITY_MIN)
+//    builder.setWhen(0)
+//    builder.setSmallIcon(R.drawable.ic_action_add)
+//    thisService.startForeground(33215,builder.build())
+
   }
 
   override def onBind(intent: Intent): IBinder = null
