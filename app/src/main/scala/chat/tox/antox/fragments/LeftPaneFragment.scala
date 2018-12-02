@@ -31,14 +31,15 @@ class LeftPaneFragment extends Fragment {
       //disable the material ripple layout on pre-honeycomb devices
       if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
         val customTabLayout: FrameLayout = LayoutInflater.from(getActivity).inflate(R.layout.custom_tab_old, parent, false).asInstanceOf[FrameLayout]
+        //bugfix fix the "setVisibility(or other methods) is not a member of Nothing” error,which occurs in sdk 26 and above
         val imageView = customTabLayout.findViewById(R.id.image).asInstanceOf[ImageView]
         imageView.setImageResource(ICONS(position))
         imageView.setLayoutParams(params)
         customTabLayout
       } else {
         val materialRippleLayout: MaterialRippleLayout = LayoutInflater.from(getActivity).inflate(R.layout.custom_tab, parent, false).asInstanceOf[MaterialRippleLayout]
-        val imageView = materialRippleLayout.findViewById(R.id.image)
-        imageView.asInstanceOf[ImageView].setImageResource(ICONS(position))
+        val imageView = materialRippleLayout.findViewById(R.id.image).asInstanceOf[ImageView]
+        imageView.setImageResource(ICONS(position))
         imageView.setLayoutParams(params)
         materialRippleLayout
       }

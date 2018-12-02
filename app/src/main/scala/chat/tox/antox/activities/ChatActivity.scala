@@ -7,9 +7,9 @@ import java.util.Date
 import android.app.Activity
 import android.content.{Context, Intent}
 import android.net.Uri
-import android.os.{Build, Bundle, Environment, SystemClock}
+import android.os._
 import android.provider.MediaStore
-import android.support.v4.content.CursorLoader
+import android.support.v4.content.{CursorLoader, FileProvider}
 import android.view.View
 import android.view.View.OnClickListener
 import android.widget._
@@ -44,20 +44,27 @@ class ChatActivity extends GenericChatActivity[FriendKey] {
 
   override def getKey(key: String): FriendKey = new FriendKey(key)
 
+  private def initPhotoError(){
+    //bugfix   fix ClipData.Item.getUri()  in Android 7.0 and above,which appears when taking picture
+    val builder = new StrictMode.VmPolicy.Builder();
+    StrictMode.setVmPolicy(builder.build());
+    builder.detectFileUriExposure();
+  }
+
   override def onCreate(savedInstanceState: Bundle): Unit = {
 
     super.onCreate(savedInstanceState)
     val thisActivity = this
-
+    initPhotoError()  //bugfix   fix ClipData.Item.getUri()  in Android 7.0 and above
     getSupportActionBar.setDisplayHomeAsUpEnabled(true)
     ThemeManager.applyTheme(this, getSupportActionBar)
 
     //findViewById(R.id.info).setVisibility(View.GONE)
 
     /* Set up on click actions for attachment buttons. Could possible just add onClick to the XML?? */
-    val attachmentButton = findViewById(R.id.attachment_button)
-    val cameraButton = findViewById(R.id.camera_button)
-    val imageButton = findViewById(R.id.image_button)
+    val attachmentButton =  findViewById(R.id.attachment_button).asInstanceOf[View]
+    val cameraButton = findViewById(R.id.camera_button).asInstanceOf[View]
+    val imageButton = findViewById(R.id.image_button).asInstanceOf[View]
 
     activeCallBarView = findViewById(R.id.call_bar_wrap).asInstanceOf[RelativeLayout]
     activeCallBarView.setVisibility(View.GONE)
@@ -113,11 +120,12 @@ class ChatActivity extends GenericChatActivity[FriendKey] {
 
         val cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
         val image_name = "Antoxpic " + new SimpleDateFormat("hhmm").format(new Date()) + " "
-
         val storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+//        val storageDir = getExternalFilesDir("PICTURES")
         try {
           val file = File.createTempFile(image_name, ".jpg", storageDir)
           val imageUri = Uri.fromFile(file)
+//        val imageUri = FileProvider.getUriForFile(getApplicationContext, getPackageName + ".provider", file)
           cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
           photoPath = Some(file.getAbsolutePath)
           startActivityForResult(cameraIntent, Constants.PHOTO_RESULT)

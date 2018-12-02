@@ -78,9 +78,11 @@ abstract class AbstractContactsFragment extends Fragment with OnItemClickListene
       val fab = rootView.findViewById(R.id.fab).asInstanceOf[FloatingActionButton]
       val parser = getResources.getXml(R.color.fab_colors_list)
       fab.setBackgroundTintList(ColorStateList.createFromXml(getResources, parser))
-      rootView.findViewById(R.id.fab).setVisibility(View.VISIBLE)
+      //bugfix fix the "setVisibility(or other methods) is not a member of Nothing” error,which occurs in sdk 26 and above
+      rootView.findViewById(R.id.fab).asInstanceOf[View].setVisibility(View.VISIBLE)
     } else {
-      rootView.findViewById(R.id.fab).setVisibility(View.GONE)
+      //bugfix fix the "setVisibility(or other methods) is not a member of Nothing” error,which occurs in sdk 26 and above
+      rootView.findViewById(R.id.fab).asInstanceOf[View].setVisibility(View.GONE)
     }
 
     if (showSearch) {
@@ -98,10 +100,10 @@ abstract class AbstractContactsFragment extends Fragment with OnItemClickListene
         }
       })
     } else {
-      rootView.findViewById(R.id.contact_search_view).setVisibility(View.GONE)
+      rootView.findViewById(R.id.contact_search_view).asInstanceOf[View].setVisibility(View.GONE)
     }
 
-    rootView.findViewById(R.id.center_text).setVisibility(View.GONE)
+    rootView.findViewById(R.id.center_text).asInstanceOf[View].setVisibility(View.GONE)
 
     rootView
   }

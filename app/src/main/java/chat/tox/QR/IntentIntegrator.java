@@ -240,7 +240,7 @@ public class IntentIntegrator {
      * if a prompt was needed, or null otherwise
      */
     public final AlertDialog initiateScan(Collection<String> desiredBarcodeFormats) {
-        Intent intentScan = new Intent(BS_PACKAGE + ".SCAN");
+        /*Intent intentScan = new Intent(BS_PACKAGE + ".SCAN");
         intentScan.addCategory(Intent.CATEGORY_DEFAULT);
 
         // check which types of codes to scan for
@@ -263,7 +263,8 @@ public class IntentIntegrator {
         intentScan.setPackage(targetAppPackage);
         intentScan.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intentScan.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
-        attachMoreExtras(intentScan);
+        attachMoreExtras(intentScan);*/
+        Intent intentScan = new Intent("com.xys.libzxing.zxing.activity.CaptureActivity");
         startActivityForResult(intentScan, REQUEST_CODE);
         return null;
     }
@@ -346,10 +347,16 @@ public class IntentIntegrator {
     public static IntentResult parseActivityResult(int requestCode, int resultCode, Intent intent) {
         if (requestCode == REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
-                String contents = intent.getStringExtra("SCAN_RESULT");
-                String formatName = intent.getStringExtra("SCAN_RESULT_FORMAT");
-                byte[] rawBytes = intent.getByteArrayExtra("SCAN_RESULT_BYTES");
-                int intentOrientation = intent.getIntExtra("SCAN_RESULT_ORIENTATION", Integer.MIN_VALUE);
+
+                //String contents = intent.getStringExtra("SCAN_RESULT");
+                //String formatName = intent.getStringExtra("SCAN_RESULT_FORMAT");
+                //byte[] rawBytes = intent.getByteArrayExtra("SCAN_RESULT_BYTES");
+                //int intentOrientation = intent.getIntExtra("SCAN_RESULT_ORIENTATION", Integer.MIN_VALUE);
+                Bundle bundle = intent.getExtras();
+                String contents = bundle.getString("result");
+                String formatName = bundle.getString("result_format") ;
+                byte[] rawBytes = bundle.getByteArray("result_bytes") ;
+                int intentOrientation = bundle.getInt("RESULT_ORIENTATION", Integer.MIN_VALUE);
                 Integer orientation = intentOrientation == Integer.MIN_VALUE ? null : intentOrientation;
                 String errorCorrectionLevel = intent.getStringExtra("SCAN_RESULT_ERROR_CORRECTION_LEVEL");
                 return new IntentResult(contents,

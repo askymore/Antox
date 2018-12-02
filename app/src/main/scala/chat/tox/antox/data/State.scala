@@ -188,8 +188,7 @@ object State {
     activity.stopService(startTox)
     val loginIntent = new Intent(activity, classOf[LoginActivity])
     loginIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
-      Intent.FLAG_ACTIVITY_CLEAR_TOP |
-      IntentCompat.FLAG_ACTIVITY_CLEAR_TASK)
+      Intent.FLAG_ACTIVITY_CLEAR_TOP )
     activity.startActivity(loginIntent)
     activity.finish()
   }

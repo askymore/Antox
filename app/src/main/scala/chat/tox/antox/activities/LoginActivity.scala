@@ -47,8 +47,7 @@ class LoginActivity extends AppCompatActivity with AdapterView.OnItemSelectedLis
     if (userDb.numUsers() == 0) {
       val createAccount = new Intent(getApplicationContext, classOf[CreateAccountActivity])
       createAccount.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
-        Intent.FLAG_ACTIVITY_CLEAR_TOP |
-        IntentCompat.FLAG_ACTIVITY_CLEAR_TASK)
+        Intent.FLAG_ACTIVITY_CLEAR_TOP )
       startActivity(createAccount)
       finish()
     } else if (userDb.loggedIn) {

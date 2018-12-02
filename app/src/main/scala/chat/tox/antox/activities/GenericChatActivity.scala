@@ -13,14 +13,14 @@ import android.text.{Editable, InputFilter, TextWatcher}
 import android.view.inputmethod.EditorInfo
 import android.view.{KeyEvent, Menu, MenuItem, View}
 import android.widget.TextView.OnEditorActionListener
-import android.widget.{EditText, TextView}
+import android.widget.{Button, EditText, TextView}
 import chat.tox.antox.R
 import chat.tox.antox.adapters.ChatMessagesAdapter
 import chat.tox.antox.data.State
 import chat.tox.antox.theme.ThemeManager
 import chat.tox.antox.utils.StringExtensions.RichString
 import chat.tox.antox.utils.ViewExtensions.RichView
-import chat.tox.antox.utils.{KeyboardOptions, AntoxLog, Constants, Location}
+import chat.tox.antox.utils.{AntoxLog, Constants, KeyboardOptions, Location}
 import chat.tox.antox.wrapper.{ContactKey, Message, MessageType}
 import im.tox.tox4j.core.enums.ToxMessageType
 import jp.wasabeef.recyclerview.animators.LandingAnimator
@@ -121,7 +121,8 @@ abstract class GenericChatActivity[KeyType <: ContactKey] extends AppCompatActiv
 
     })
 
-    val sendMessageButton = this.findViewById(R.id.send_message_button)
+    //bugfix fix the "setVisibility(or other methods) is not a member of Nothing” error,which occurs in sdk 26 and above
+    val sendMessageButton = this.findViewById(R.id.send_message_button).asInstanceOf[View]
     sendMessageButton.setOnClickListener(new View.OnClickListener() {
       override def onClick(v: View) {
         onSendMessage()
@@ -172,7 +173,7 @@ abstract class GenericChatActivity[KeyType <: ContactKey] extends AppCompatActiv
   override def onOptionsItemSelected(item: MenuItem): Boolean = {
     super.onOptionsItemSelected(item)
 
-    val maybeItemView = Option(toolbar.findViewById(item.getItemId))
+    val maybeItemView = Option(toolbar.findViewById(item.getItemId).asInstanceOf[View])
     val clickLocation = maybeItemView.map(_.getCenterLocationOnScreen()).getOrElse(Location.Origin)
 
     item.getItemId match {

@@ -25,7 +25,7 @@ class RecentFragment extends AbstractContactsFragment(showSearch = false, showFa
 
   override def onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle): View = {
     val rootView = super.onCreateView(inflater, container, savedInstanceState)
-    rootView.findViewById(R.id.center_text).setVisibility(View.VISIBLE)
+    rootView.findViewById(R.id.center_text).asInstanceOf[View].setVisibility(View.VISIBLE)
 
     rootView
   }
@@ -33,7 +33,7 @@ class RecentFragment extends AbstractContactsFragment(showSearch = false, showFa
   def updateContactsLists(leftPaneAdapter: ContactListAdapter, contactList: Seq[ContactInfo], activeCalls: Iterable[Call]): Unit = {
     val sortedContactList = contactList.filter(c => c.lastMessage.isDefined).sortWith(compareNames).sortWith(compareLastMessageTimestamp)
     if (sortedContactList.nonEmpty) {
-      getView.findViewById(R.id.center_text).setVisibility(View.GONE)
+      getView.findViewById(R.id.center_text).asInstanceOf[View].setVisibility(View.GONE)
       for (contact <- sortedContactList) {
         val itemType = if (contact.isInstanceOf[GroupInfo]) {
           ContactItemType.GROUP
@@ -63,7 +63,8 @@ class RecentFragment extends AbstractContactsFragment(showSearch = false, showFa
         }
       }
     } else {
-      getView.findViewById(R.id.center_text).setVisibility(View.VISIBLE)
+      //bugfix fix the "setVisibility(or other methods) is not a member of Nothing” error,which occurs in sdk 26 and above
+      getView.findViewById(R.id.center_text).asInstanceOf[View].setVisibility(View.VISIBLE)
     }
   }
 

@@ -55,7 +55,7 @@ class MainDrawerFragment extends Fragment {
       }
     })
 
-    val drawerHeader = rootView.findViewById(R.id.drawer_header)
+    val drawerHeader = rootView.findViewById(R.id.drawer_header).asInstanceOf[View]
 
     // zoff //
     if (drawerHeader != null) {
@@ -118,8 +118,9 @@ class MainDrawerFragment extends Fragment {
   }
 
   def updateNavigationHeaderStatus(toxConnection: ToxConnection): Unit = {
-    val statusView = getView.findViewById(R.id.status)
 
+    //bugfix fix the "setVisibility(or other methods) is not a member of Nothing” error,which occurs in sdk 26 and above
+    val statusView = getView.findViewById(R.id.status).asInstanceOf[View]
     val status = UserStatus.getToxUserStatusFromString(State.userDb(getActivity).getActiveUserDetails.status)
     val online = toxConnection != ToxConnection.NONE
     val drawable = getResources.getDrawable(IconColor.iconDrawable(online, status))

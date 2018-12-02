@@ -6,6 +6,7 @@ import android.app.AlertDialog
 import android.content._
 import android.net.Uri
 import android.os.Environment
+import android.support.v4.content.FileProvider
 import android.text.format.Formatter
 import android.view.View
 import android.view.View.{OnClickListener, OnLongClickListener}
@@ -77,8 +78,10 @@ class FileMessageHolder(val view: View) extends GenericMessageHolder(view) with 
   }
 
   def showFileButtons(): Unit = {
-    val accept = fileButtons.findViewById(R.id.file_accept_button)
-    val reject = fileButtons.findViewById(R.id.file_reject_button)
+
+    //bugfix fix the "setVisibility(or other methods) is not a member of Nothing” error,which occurs in sdk 26 and above
+    val accept = fileButtons.findViewById(R.id.file_accept_button).asInstanceOf[View]
+    val reject = fileButtons.findViewById(R.id.file_reject_button).asInstanceOf[View]
 
     val key = msg.key.asInstanceOf[FriendKey]
     accept.setOnClickListener(new View.OnClickListener() {
@@ -177,6 +180,10 @@ class FileMessageHolder(val view: View) extends GenericMessageHolder(view) with 
         val i = new Intent()
         i.setAction(android.content.Intent.ACTION_VIEW)
         i.setDataAndType(Uri.fromFile(file), "image/*")
+//        bugfix   fix the FileUriExposedException in Android 6.0 and above
+//        i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+//        i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+//        i.setDataAndType(FileProvider.getUriForFile(context.getApplicationContext, context.getPackageName + ".provider", file), "image/*")
         context.startActivity(i)
 
       case _ =>

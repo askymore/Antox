@@ -3,6 +3,7 @@ package chat.tox.antox.activities
 import android.content.{Context, Intent}
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import chat.tox.antox.R
 import chat.tox.antox.data.State
 import chat.tox.antox.tox.MessageHelper
@@ -19,10 +20,10 @@ class GroupChatActivity extends GenericChatActivity[GroupKey] {
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
-
-    findViewById(R.id.info).setVisibility(View.GONE)
-    findViewById(R.id.call).setVisibility(View.GONE)
-    findViewById(R.id.video).setVisibility(View.GONE)
+    //bugfix fix the "setVisibility(or other methods) is not a member of Nothing” error,which occurs in sdk 26 and above
+    findViewById(R.id.info).asInstanceOf[View].setVisibility(View.GONE)
+    findViewById(R.id.call).asInstanceOf[View].setVisibility(View.GONE)
+    findViewById(R.id.video).asInstanceOf[View].setVisibility(View.GONE)
 
     statusIconView.setVisibility(View.GONE)
   }
