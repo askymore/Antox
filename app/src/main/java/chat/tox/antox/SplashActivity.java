@@ -38,6 +38,7 @@ public class SplashActivity extends AppCompatActivity implements EasyPermissions
             // don't worry about this, this is just annoying
             AntoxLog.debug("Registered another error handler when we didn't need to.", AntoxLog.DEFAULT_TAG());
         }
+        LogToFile.init(this.getApplicationContext());
 
         getPermissions();
     }

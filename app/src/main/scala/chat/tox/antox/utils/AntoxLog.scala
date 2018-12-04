@@ -1,6 +1,7 @@
 package chat.tox.antox.utils
 
 import android.util.Log
+import chat.tox.antox.LogToFile
 import chat.tox.antox.utils.AntoxLog.Priority.Priority
 import org.scaloid.common.LoggerTag
 
@@ -17,10 +18,15 @@ object AntoxLog {
     priority match {
       case Priority.ASSERT => Log.println(Log.ASSERT, tag.tag, msg)
       case Priority.DEBUG => Log.d(tag.tag, msg)
+        LogToFile.d( tag.tag, msg)
       case Priority.ERROR => Log.e(tag.tag, msg)
+        LogToFile.e( tag.tag, msg)
       case Priority.INFO => Log.i(tag.tag, msg)
+        LogToFile.i( tag.tag, msg)
       case Priority.VERBOSE => Log.v(tag.tag, msg)
+        LogToFile.v( tag.tag, msg)
       case Priority.WARN => Log.w(tag.tag, msg)
+        LogToFile.w( tag.tag, msg)
     }
   }
 

@@ -18,7 +18,7 @@ import org.json.{JSONException, JSONObject}
 import org.scaloid.common.LoggerTag
 import rx.lang.scala.Observable
 import rx.lang.scala.schedulers.{IOScheduler, NewThreadScheduler}
-
+import scala.util.control.Breaks
 object ToxSingleton {
 
   var tox: ToxCore = _
@@ -65,15 +65,25 @@ object ToxSingleton {
 
     if (updateNodes) updateCachedDhtNodes(ctx)
 
-    dhtNodes =
-      (if (dhtNodes.isEmpty) None else Some(dhtNodes))
-        .orElse(readCachedDhtNodes(ctx))
-        .orElse({
-          // if all else fails, try to pull the nodes from the server again
-          updateCachedDhtNodes(ctx)
-          readCachedDhtNodes(ctx)
-        })
-        .getOrElse(Nil)
+    //todo :to increase bootstrap,delete json temporary  change request askymore-1
+//    dhtNodes =
+//      (if (dhtNodes.isEmpty) None else Some(dhtNodes))
+//        .orElse(readCachedDhtNodes(ctx))
+//        .orElse({
+//          // if all else fails, try to pull the nodes from the server again
+//          updateCachedDhtNodes(ctx)
+//          readCachedDhtNodes(ctx)
+//        })
+//        .getOrElse(Nil)
+
+    dhtNodes +:= DhtNode("luanadd","178.62.250.138",ToxPublicKey.unsafeFromValue(Hex.hexStringToBytes("788236D34978D1D5BD822F0A5BEBD2C53C64CC31CD3149350EE27D4D9A2F9B6B")),Port.unsafeFromInt(33445))
+    dhtNodes +:= DhtNode("luanadd","nodes.tox.chat",ToxPublicKey.unsafeFromValue(Hex.hexStringToBytes("6FC41E2BD381D37E9748FC0E0328CE086AF9598BECC8FEB7DDF2E440475F300E")),Port.unsafeFromInt(33445))
+    dhtNodes +:= DhtNode("luanadd","130.133.110.14",ToxPublicKey.unsafeFromValue(Hex.hexStringToBytes("461FA3776EF0FA655F1A05477DF1B3B614F7D6B124F7DB1DD4FE3C08B03B640F")),Port.unsafeFromInt(33445))
+    dhtNodes +:= DhtNode("luanadd","163.172.136.118",ToxPublicKey.unsafeFromValue(Hex.hexStringToBytes("2C289F9F37C20D09DA83565588BF496FAB3764853FA38141817A72E3F18ACA0B")),Port.unsafeFromInt(33445))
+    dhtNodes +:= DhtNode("luanadd","217.182.143.254",ToxPublicKey.unsafeFromValue(Hex.hexStringToBytes("7AED21F94D82B05774F697B209628CD5A9AD17E0C073D9329076A4C28ED28147")),Port.unsafeFromInt(443))
+    dhtNodes +:= DhtNode("luanadd","185.14.30.213",ToxPublicKey.unsafeFromValue(Hex.hexStringToBytes("2555763C8C460495B14157D234DD56B86300A2395554BCAE4621AC345B8C1B1B")),Port.unsafeFromInt(443))
+    dhtNodes +:= DhtNode("luanadd","128.199.199.197",ToxPublicKey.unsafeFromValue(Hex.hexStringToBytes("B05C8869DBB4EDDD308F43C1A974A20A725A36EACCA123862FDE9945BF9D3E09")),Port.unsafeFromInt(33445))
+    dhtNodes +:= DhtNode("luanadd","biribiri.org",ToxPublicKey.unsafeFromValue(Hex.hexStringToBytes("F404ABAA1C99A9D37D61AB54898F56793E1DEF8BD46B1038B9D822E8460FAB67")),Port.unsafeFromInt(33445))
 
     //avoid always hitting the first node in the list
     Collections.shuffle(util.Arrays.asList(dhtNodes: _*))
@@ -82,14 +92,18 @@ object ToxSingleton {
     AntoxLog.debug("Current nodes: " + dhtNodes.mkString("|"), TAG)
 
     var bootstrapped = false
-    for (i <- dhtNodes.indices) {
-      try {
-        AntoxLog.debug(s"Bootstrapping to ${dhtNodes(i).ipv4}:${dhtNodes(i).port.value}", TAG)
-        tox.bootstrap(dhtNodes(i).ipv4, dhtNodes(i).port, dhtNodes(i).key)
-        bootstrapped = true
-      } catch {
-        case _: Exception =>
-          AntoxLog.error(s"Couldn't bootstrap to node ${dhtNodes(i).ipv4}:${dhtNodes(i).port.value}")
+    val loop = new Breaks;
+    loop.breakable {
+      for (i <- dhtNodes.indices) {
+        try {
+          AntoxLog.debug(s"Bootstrapping to ${dhtNodes(i).ipv4}:${dhtNodes(i).port.value}", TAG)
+          tox.bootstrap(dhtNodes(i).ipv4, dhtNodes(i).port, dhtNodes(i).key)
+          bootstrapped = true
+          loop.break
+        } catch {
+          case _: Exception =>
+            AntoxLog.error(s"Couldn't bootstrap to node ${dhtNodes(i).ipv4}:${dhtNodes(i).port.value}")
+        }
       }
     }
 

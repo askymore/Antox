@@ -88,6 +88,7 @@ abstract class GenericChatActivity[KeyType <: ContactKey] extends AppCompatActiv
     }
 
     val db = State.db
+    //todo fix  change request askymore-1  put this code to thread
     adapter = new ChatMessagesAdapter(this,
       new util.ArrayList(mutableSeqAsJavaList(getActiveMessageList(numMessagesShown))))
 

@@ -77,6 +77,10 @@ class ToxService extends Service {
             try {
               Thread.sleep(connectionCheckInterval)
             } catch {
+              //change request askymore-1
+              case e:InterruptedException =>
+                AntoxLog.debug("Thread interrupted")
+                throw e
               case e: Exception =>
             }
           } else {
@@ -91,6 +95,10 @@ class ToxService extends Service {
               Thread.sleep(Math.min(ToxSingleton.interval, ToxSingleton.toxAv.interval))
               ticks += 1
             } catch {
+              //change request askymore-1
+              case e:InterruptedException =>
+                AntoxLog.debug("Thread interrupted")
+                throw e
               case e: Exception =>
                 e.printStackTrace()
             }
@@ -100,9 +108,16 @@ class ToxService extends Service {
         connectionSubscription.unsubscribe()
       }
     }
+    //change request askymore-1
+    try{
+      serviceThread = new Thread(start)
+      serviceThread.start()
+    }catch{
+      case e: Exception =>
+        serviceThread = new Thread(start)
+        serviceThread.start()
+    }
 
-    serviceThread = new Thread(start)
-    serviceThread.start()
 
 //change request askymore-1
 //Todo :to keep connection alive ,put a notification still forground
