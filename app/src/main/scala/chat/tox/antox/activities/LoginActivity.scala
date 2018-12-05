@@ -20,7 +20,7 @@ import pub.devrel.easypermissions.{AppSettingsDialog, EasyPermissions}
 
 import scala.collection.JavaConversions._
 
-class LoginActivity extends AppCompatActivity with AdapterView.OnItemSelectedListener with EasyPermissions.PermissionCallbacks {
+class LoginActivity extends AppCompatActivity with AdapterView.OnItemSelectedListener {
 
   private var profileSelected: String = _
   private val RC_ANTOX_PERM = 146
@@ -29,11 +29,6 @@ class LoginActivity extends AppCompatActivity with AdapterView.OnItemSelectedLis
 
   protected override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
-    //change request askymore-1 get rid of the splash
-    LogToFile.init(this.getApplicationContext)
-    getPermissions()
-    //change request askymore-1 get rid of the splash
-
     setContentView(R.layout.activity_login)
     getSupportActionBar.hide()
 
@@ -81,33 +76,6 @@ class LoginActivity extends AppCompatActivity with AdapterView.OnItemSelectedLis
 
     // this may get the app banned from google play :-(
     // ShowPermissionDialog()
-  }
-
-  //change request askymore-1 get rid of the splash
-  def getPermissions(): Unit = {
-    if (EasyPermissions.hasPermissions(this, perms.toString)) { // already have granted all permissions
-      return
-    }
-    // List<String> perms2 = new ArrayList<String>(Arrays.asList(perms));
-    if (EasyPermissions.hasPermissions(this, perms.toString)) {
-    }
-    else { // Ask for permissions
-      EasyPermissions.requestPermissions(this, getString(R.string.request_permissions_text), RC_ANTOX_PERM, perms.toString)
-    }
-  }
-
-  override def onPermissionsGranted(requestCode: Int, perms2: util.List[String]): Unit = { // Some permissions have been granted
-    if (EasyPermissions.hasPermissions(this, perms.toString)) { // already have granted all permissions
-      finish()
-      startActivity(getIntent)
-    }
-    else getPermissions()
-  }
-
-  override def onPermissionsDenied(requestCode: Int, perms2: util.List[String]): Unit = { // (Optional) Check whether the user denied any permissions and checked "NEVER ASK AGAIN."
-    // This will display a dialog directing them to enable the permission in app settings.
-    if (EasyPermissions.somePermissionPermanentlyDenied(this, perms2)) new AppSettingsDialog.Builder(this).build.show()
-    else getPermissions()
   }
 
 

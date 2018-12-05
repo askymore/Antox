@@ -25,7 +25,7 @@ public class SplashActivity extends AppCompatActivity implements EasyPermissions
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        LogToFile.init(this.getApplicationContext());
         try {
             RxJavaPlugins.getInstance().registerErrorHandler(new RxJavaErrorHandler() {
                 @Override
