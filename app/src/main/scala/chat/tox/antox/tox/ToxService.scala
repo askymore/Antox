@@ -35,28 +35,24 @@ object ToxService {
     jobScheduler.schedule(builder.build)
   }
 }
-class ToxService extends Service with ActivityLifecycleCallbacks{
+class ToxService extends Service{
 
   private var serviceThread: Thread = _
 
   private var keepRunning: Boolean = true
 
-  private val connectionCheckInterval = 60 * 1000 //in ms
+  private val connectionCheckInterval = 3 * 60 * 1000 //in ms
 
   private val reconnectionIntervalSeconds = 60 //in second
 
   private var callService: CallService = _
 
-  private var isForeground : Boolean= true
-  private var bgIterateInterval =10 * 1000 //in ms
 
   override def onCreate() {
     if (!ToxSingleton.isInited) {
       ToxSingleton.initTox(getApplicationContext)
       AntoxLog.debug("Initting ToxSingleton")
     }
-    getApplication.registerActivityLifecycleCallbacks(this)  //monitor fore or background
-
     keepRunning = true
     val thisService = this
 
@@ -103,11 +99,9 @@ class ToxService extends Service with ActivityLifecycleCallbacks{
             try {
               ToxSingleton.tox.iterate(toxCallbackListener)
 //              change request askymore-1   give up video and audio
-              if (isForeground)
                 Thread.sleep(ToxSingleton.interval)
-                else
-                Thread.sleep(bgIterateInterval)
-            } catch {
+              }
+             catch {
               case e: Exception =>
                 e.printStackTrace()
             }
@@ -118,36 +112,22 @@ class ToxService extends Service with ActivityLifecycleCallbacks{
     }
     serviceThread = new Thread(start)
     serviceThread.start()
-
   }
 
   override def onBind(intent: Intent): IBinder = null
 
-  override def onStartCommand(intent: Intent, flags: Int, id: Int): Int = Service.START_STICKY
+  override def onStartCommand(intent: Intent, flags: Int, id: Int): Int = Service.START_NOT_STICKY
 
   override def onDestroy() {
     super.onDestroy()
     keepRunning = false
     serviceThread.interrupt()
     serviceThread.join()
-    callService.destroy()
+//    callService.destroy()
     ToxSingleton.save()
     ToxSingleton.isInited = false
     ToxSingleton.tox.close()
     AntoxLog.debug("onDestroy() called for Tox service")
   }
 
-  override def onActivityResumed(activity: Activity){
-    isForeground=true
-    AntoxLog.debug("Tox turn to foreground")
-  }
-  override def onActivityPaused(activity: Activity){
-    isForeground=false
-    AntoxLog.debug("Tox turn to background")
-  }
-  override def onActivityCreated(activity: Activity, savedInstanceState: Bundle){}
-  override def onActivityStarted(activity: Activity){}
-  override def onActivityStopped(activity: Activity){}
-  override def onActivitySaveInstanceState(activity: Activity, outState: Bundle){}
-  override def onActivityDestroyed(activity: Activity){}
 }
