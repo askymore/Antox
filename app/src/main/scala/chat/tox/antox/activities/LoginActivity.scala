@@ -14,11 +14,16 @@ import android.view.{View, WindowManager}
 import android.widget._
 import chat.tox.antox.{LogToFile, R}
 import chat.tox.antox.data.State
-import chat.tox.antox.tox.ToxService
-import chat.tox.antox.utils.Options
+import chat.tox.antox.tox.{ToxJobService, ToxService, ToxSingleton}
+import chat.tox.antox.utils.{AntoxLog, Options}
 import pub.devrel.easypermissions.{AppSettingsDialog, EasyPermissions}
 
 import scala.collection.JavaConversions._
+import android.app.job.JobInfo
+import android.app.job.JobScheduler
+import android.content.ComponentName
+import android.content.Context
+import android.os.Build
 
 class LoginActivity extends AppCompatActivity with AdapterView.OnItemSelectedListener {
 
@@ -57,9 +62,10 @@ class LoginActivity extends AppCompatActivity with AdapterView.OnItemSelectedLis
       startActivity(createAccount)
       finish()
     } else if (userDb.loggedIn) {
-      val startTox = new Intent(getApplicationContext, classOf[ToxService])
-      getApplicationContext.startService(startTox)
-
+//      change request askymore-1  -optimize background job,keep alive and decrease power consuming
+//      val startTox = new Intent(getApplicationContext, classOf[ToxService])
+//      getApplicationContext.startService(startTox)
+      ToxService.initToxJobService(this)
       val main = new Intent(getApplicationContext, classOf[MainActivity])
       startActivity(main)
       finish()
@@ -72,8 +78,6 @@ class LoginActivity extends AppCompatActivity with AdapterView.OnItemSelectedLis
       profileSpinner.setSelection(0)
       profileSpinner.setOnItemSelectedListener(this)
     }
-
-
     // this may get the app banned from google play :-(
     // ShowPermissionDialog()
   }
@@ -104,8 +108,10 @@ class LoginActivity extends AppCompatActivity with AdapterView.OnItemSelectedLis
       if (userDb.doesUserExist(account)) {
         val details = userDb.getUserDetails(account)
         State.login(account, this)
-        val startTox = new Intent(getApplicationContext, classOf[ToxService])
-        getApplicationContext.startService(startTox)
+//      change request askymore-1  -optimize background job,keep alive and decrease power consuming
+//        val startTox = new Intent(getApplicationContext, classOf[ToxService])
+//        getApplicationContext.startService(startTox)
+        ToxService.initToxJobService(this)
         val main = new Intent(getApplicationContext, classOf[MainActivity])
         startActivity(main)
         finish()
@@ -118,6 +124,25 @@ class LoginActivity extends AppCompatActivity with AdapterView.OnItemSelectedLis
       }
     }
   }
+//
+//  def initToxJobService(): Unit ={
+//    if (!ToxSingleton.isInited) {
+//      ToxSingleton.initTox(getApplicationContext)
+//      AntoxLog.debug("Initting ToxSingleton")
+//    }
+//    val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE).asInstanceOf[JobScheduler]
+//    jobScheduler.cancelAll()
+//    val builder = new JobInfo.Builder(1024, new ComponentName(getPackageName, classOf[ToxJobService].getName))
+//    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) { //android N之后时间必须在15分钟以上
+//      builder.setPeriodic(15 * 60 * 1000)
+//    }
+//    else builder.setPeriodic(60 * 1000)
+//    builder.setPersisted(true)
+//    builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+//    builder.setRequiresCharging(false)
+//    builder.setRequiresDeviceIdle(false)
+//    jobScheduler.schedule(builder.build)
+//  }
 
   def onClickCreateAccount(view: View) {
     val createAccount = new Intent(getApplicationContext, classOf[CreateAccountActivity])

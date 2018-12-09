@@ -135,8 +135,10 @@ class CreateAccountActivity extends AppCompatActivity {
     userDb.updateActiveUserDetail(DatabaseConstants.COLUMN_NAME_PASSWORD, password)
 
     // Start the activity
-    val startTox = new Intent(getApplicationContext, classOf[ToxService])
-    getApplicationContext.startService(startTox)
+//      change request askymore-1  -optimize background job,keep alive and decrease power consuming
+//    val startTox = new Intent(getApplicationContext, classOf[ToxService])
+//    getApplicationContext.startService(startTox)
+    ToxService.initToxJobService(this)
     val main = new Intent(getApplicationContext, classOf[MainActivity])
     startActivity(main)
     setResult(Activity.RESULT_OK)

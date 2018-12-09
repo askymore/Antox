@@ -252,7 +252,9 @@ class SettingsActivity extends BetterPreferenceActivity with Preference.OnPrefer
       AntoxLog.debug("One or more network settings changed. Restarting Tox service")
       val service = new Intent(this, classOf[ToxService])
       this.stopService(service)
-      this.startService(service)
+//      change request askymore-1  -optimize background job,keep alive and decrease power consuming
+      ToxService.initToxJobService(this)
+//      this.startService(service)
     }
   }
 

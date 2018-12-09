@@ -1,39 +1,61 @@
-
 package chat.tox.antox.tox
 
-import android.app.Service
-import android.content.Intent
-import android.os.IBinder
+import android.app.{Activity, Application, Service}
+import android.content.{ComponentName, Context, Intent}
+import android.os.{Build, Bundle, IBinder}
 import android.preference.PreferenceManager
-import android.support.v4.app.NotificationCompat
-import chat.tox.antox.R
 import chat.tox.antox.av.CallService
 import chat.tox.antox.callbacks.{AntoxOnSelfConnectionStatusCallback, ToxCallbackListener, ToxavCallbackListener}
 import chat.tox.antox.utils.AntoxLog
 import im.tox.tox4j.core.enums.ToxConnection
-import im.tox.tox4j.impl.jni.ToxJniLog
 import rx.lang.scala.schedulers.AndroidMainThreadScheduler
 import rx.lang.scala.{Observable, Subscription}
 
 import scala.concurrent.duration._
+import android.app.Application.ActivityLifecycleCallbacks
+import android.app.job.{JobInfo, JobScheduler}
 
-class ToxService extends Service {
+object ToxService {
+  def initToxJobService(activity:Activity): Unit ={
+    if (!ToxSingleton.isInited) {
+      ToxSingleton.initTox(activity.getApplicationContext)
+      AntoxLog.debug("Initting ToxSingleton")
+    }
+    val jobScheduler = activity.getSystemService(Context.JOB_SCHEDULER_SERVICE).asInstanceOf[JobScheduler]
+    jobScheduler.cancelAll()
+    val builder = new JobInfo.Builder(1024, new ComponentName(activity.getPackageName, classOf[ToxJobService].getName))
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) { //android N之后时间必须在15分钟以上
+      builder.setPeriodic(15 * 60 * 1000)
+    }
+    else builder.setPeriodic(60 * 1000)
+    builder.setPersisted(true)
+    builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+    builder.setRequiresCharging(false)
+    builder.setRequiresDeviceIdle(false)
+    jobScheduler.schedule(builder.build)
+  }
+}
+class ToxService extends Service with ActivityLifecycleCallbacks{
 
   private var serviceThread: Thread = _
 
   private var keepRunning: Boolean = true
 
-  private val connectionCheckInterval = 10000 //in ms
+  private val connectionCheckInterval = 60 * 1000 //in ms
 
-  private val reconnectionIntervalSeconds = 60
+  private val reconnectionIntervalSeconds = 60 //in second
 
   private var callService: CallService = _
+
+  private var isForeground : Boolean= true
+  private var bgIterateInterval =10 * 1000 //in ms
 
   override def onCreate() {
     if (!ToxSingleton.isInited) {
       ToxSingleton.initTox(getApplicationContext)
       AntoxLog.debug("Initting ToxSingleton")
     }
+    getApplication.registerActivityLifecycleCallbacks(this)  //monitor fore or background
 
     keepRunning = true
     val thisService = this
@@ -42,12 +64,11 @@ class ToxService extends Service {
 
       override def run() {
         val preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext)
-
-        callService = new CallService(thisService)
-        callService.start()
-
+//              change request askymore-1   give up video and audio
+//        callService = new CallService(thisService)
+//        callService.start()
         val toxCallbackListener = new ToxCallbackListener(thisService)
-        val toxAvCallbackListener = new ToxavCallbackListener(thisService)
+//        val toxAvCallbackListener = new ToxavCallbackListener(thisService)
 
         var reconnection: Subscription = null
 
@@ -64,69 +85,39 @@ class ToxService extends Service {
               reconnection = Observable
                 .interval(reconnectionIntervalSeconds seconds)
                 .subscribe(x => {
-                    AntoxLog.debug("Reconnecting")
-                    Observable[Boolean](_ => ToxSingleton.bootstrap(getApplicationContext)).subscribe()
-                  })
+                  AntoxLog.debug("Reconnecting")
+                  Observable[Boolean](_ => ToxSingleton.bootstrap(getApplicationContext)).subscribe()
+                })
               AntoxLog.debug(s"Tox disconnected. Scheduled reconnection every $reconnectionIntervalSeconds seconds")
             }
           })
 
-        var ticks = 0
         while (keepRunning) {
           if (!ToxSingleton.isToxConnected(preferences, thisService)) {
             try {
               Thread.sleep(connectionCheckInterval)
             } catch {
-              //change request askymore-1
-              case e:InterruptedException =>
-                AntoxLog.debug("Thread interrupted")
-                throw e
               case e: Exception =>
             }
           } else {
             try {
               ToxSingleton.tox.iterate(toxCallbackListener)
-              ToxSingleton.toxAv.iterate(toxAvCallbackListener)
-
-              if (ticks % 100 == 0) {
-                println(ToxJniLog().entries.filter(_.name == "tox4j_video_receive_frame_cb").map(_.elapsedNanos).toList.map(nanos => s" elapsed nanos video cb: $nanos").mkString("\n"))
-              }
-
-              Thread.sleep(Math.min(ToxSingleton.interval, ToxSingleton.toxAv.interval))
-              ticks += 1
+//              change request askymore-1   give up video and audio
+              if (isForeground)
+                Thread.sleep(ToxSingleton.interval)
+                else
+                Thread.sleep(bgIterateInterval)
             } catch {
-              //change request askymore-1
-              case e:InterruptedException =>
-                AntoxLog.debug("Thread interrupted")
-                throw e
               case e: Exception =>
                 e.printStackTrace()
             }
           }
         }
-
         connectionSubscription.unsubscribe()
       }
     }
-    //change request askymore-1
-    try{
-      serviceThread = new Thread(start)
-      serviceThread.start()
-    }catch{
-      case e: Exception =>
-        serviceThread = new Thread(start)
-        serviceThread.start()
-    }
-
-
-//change request askymore-1
-//Todo :to keep connection alive ,put a notification still forground
-//    val builder=new NotificationCompat.Builder(this)
-//    builder.setContentTitle("Antox")
-//    builder.setPriority(NotificationCompat.PRIORITY_MIN)
-//    builder.setWhen(0)
-//    builder.setSmallIcon(R.drawable.ic_action_add)
-//    thisService.startForeground(33215,builder.build())
+    serviceThread = new Thread(start)
+    serviceThread.start()
 
   }
 
@@ -137,15 +128,26 @@ class ToxService extends Service {
   override def onDestroy() {
     super.onDestroy()
     keepRunning = false
-
     serviceThread.interrupt()
     serviceThread.join()
-
     callService.destroy()
-
     ToxSingleton.save()
     ToxSingleton.isInited = false
     ToxSingleton.tox.close()
     AntoxLog.debug("onDestroy() called for Tox service")
   }
+
+  override def onActivityResumed(activity: Activity){
+    isForeground=true
+    AntoxLog.debug("Tox turn to foreground")
+  }
+  override def onActivityPaused(activity: Activity){
+    isForeground=false
+    AntoxLog.debug("Tox turn to background")
+  }
+  override def onActivityCreated(activity: Activity, savedInstanceState: Bundle){}
+  override def onActivityStarted(activity: Activity){}
+  override def onActivityStopped(activity: Activity){}
+  override def onActivitySaveInstanceState(activity: Activity, outState: Bundle){}
+  override def onActivityDestroyed(activity: Activity){}
 }
