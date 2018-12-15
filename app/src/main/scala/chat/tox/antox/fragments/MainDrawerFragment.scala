@@ -29,7 +29,8 @@ class MainDrawerFragment extends Fragment {
 
   private var mDrawerLayout: DrawerLayout = _
   private var mNavigationView: NavigationView = _
-
+  private var rootView: View = _
+  private var avatarView: CircleImageView= _
   private var preferences: SharedPreferences = _
 
   private var userDetailsSubscription: Subscription = _
@@ -42,7 +43,10 @@ class MainDrawerFragment extends Fragment {
   override def onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle): View = {
 
     super.onCreateView(inflater, container, savedInstanceState)
-    val rootView = inflater.inflate(R.layout.fragment_main_drawer, container, false)
+    rootView = inflater.inflate(R.layout.fragment_main_drawer, container, false)
+
+    //set up the avatar view
+    avatarView = rootView.findViewById(R.id.drawer_avatar).asInstanceOf[CircleImageView]
 
     // Set up the navigation drawer
     mDrawerLayout = rootView.findViewById(R.id.drawer_layout).asInstanceOf[DrawerLayout]
@@ -88,10 +92,7 @@ class MainDrawerFragment extends Fragment {
   }
 
   def refreshDrawerHeader(userInfo: UserInfo, connectionStatus: ToxConnection): Unit = {
-    val avatarView = getView.findViewById(R.id.drawer_avatar).asInstanceOf[CircleImageView]
-
     val mAvatar = AVATAR.getAvatarFile(userInfo.avatarName, getActivity)
-
     // zoff //
     if (avatarView != null) {
       mAvatar match {
@@ -102,13 +103,13 @@ class MainDrawerFragment extends Fragment {
       }
     }
 
-    val nameView = getView.findViewById(R.id.name).asInstanceOf[TextView]
+    val nameView = rootView.findViewById(R.id.name).asInstanceOf[TextView]
 
     // zoff //
     if (nameView != null) {
       nameView.setText(new String(userInfo.nickname.value))
     }
-    val statusMessageView = getView.findViewById(R.id.status_message).asInstanceOf[TextView]
+    val statusMessageView = rootView.findViewById(R.id.status_message).asInstanceOf[TextView]
     // zoff //
     if (statusMessageView != null) {
       statusMessageView.setText(new String(userInfo.statusMessage.value))
@@ -120,7 +121,7 @@ class MainDrawerFragment extends Fragment {
   def updateNavigationHeaderStatus(toxConnection: ToxConnection): Unit = {
 
     //bugfix fix the "setVisibility(or other methods) is not a member of Nothing” error,which occurs in sdk 26 and above
-    val statusView = getView.findViewById(R.id.status).asInstanceOf[View]
+    val statusView = rootView.findViewById(R.id.status).asInstanceOf[View]
     val status = UserStatus.getToxUserStatusFromString(State.userDb(getActivity).getActiveUserDetails.status)
     val online = toxConnection != ToxConnection.NONE
     val drawable = getResources.getDrawable(IconColor.iconDrawable(online, status))

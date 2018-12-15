@@ -2,9 +2,11 @@ package chat.tox.antox.activities
 
 import android.app.{AlertDialog, NotificationManager}
 import android.content._
-import android.net.ConnectivityManager
+import android.net.{ConnectivityManager, Uri}
 import android.os.{Build, Bundle}
 import android.preference.PreferenceManager
+import android.provider.Settings
+import android.support.annotation.RequiresApi
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.view.{MenuItem, View, WindowManager}
@@ -75,9 +77,16 @@ class MainActivity extends AppCompatActivity {
     Options.videoCallStartWithNoVideo = preferences.getBoolean("videocallstartwithnovideo", false)
 
     State.setBatterySavingMode(preferences.getBoolean("batterysavingmode", false))
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+      showBatteryOptimizations()
+    }
   }
 
-
+  @RequiresApi(api = Build.VERSION_CODES.M)
+  def showBatteryOptimizations(): Unit ={
+    val intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + this.getPackageName))
+    startActivity(intent)
+  }
   def onClickAdd(v: View) {
     val intent = new Intent(this, classOf[AddActivity])
     startActivityForResult(intent, Constants.ADD_FRIEND_REQUEST_CODE)

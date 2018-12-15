@@ -7,4 +7,14 @@ public class Util
     {
         return Math.min(Math.max(value, min), max);
     }
+
+
+    public static void wait(Object lock, long millis) {
+        try {
+            lock.wait(millis);
+        } catch (InterruptedException e) {
+            throw new AssertionError(e);
+        }
+    }
+
 }

@@ -136,9 +136,8 @@ class CreateAccountActivity extends AppCompatActivity {
 
     // Start the activity
 //      change request askymore-1  -optimize background job,keep alive and decrease power consuming
-//    val startTox = new Intent(getApplicationContext, classOf[ToxService])
-//    getApplicationContext.startService(startTox)
-    ToxService.initToxJobService(this)
+    val startTox = new Intent(getApplicationContext, classOf[ToxService])
+    getApplicationContext.startService(startTox)
     val main = new Intent(getApplicationContext, classOf[MainActivity])
     startActivity(main)
     setResult(Activity.RESULT_OK)

@@ -1,28 +1,20 @@
 package chat.tox.antox.activities
 
-import java.util
 
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
-import android.os.{Build, Bundle}
+import android.os.{ Bundle}
 import android.preference.PreferenceManager
-import android.support.v4.content.IntentCompat
 import android.support.v7.app.AppCompatActivity
 import android.view.{View, WindowManager}
 import android.widget._
-import chat.tox.antox.{LogToFile, R}
+import chat.tox.antox.{ R}
 import chat.tox.antox.data.State
-import chat.tox.antox.tox.{ToxJobService, ToxService, ToxSingleton}
+import chat.tox.antox.tox.{ ToxService}
 import chat.tox.antox.utils.{AntoxLog, Options}
-import pub.devrel.easypermissions.{AppSettingsDialog, EasyPermissions}
-
 import scala.collection.JavaConversions._
-import android.app.job.JobInfo
-import android.app.job.JobScheduler
-import android.content.ComponentName
-import android.content.Context
 import android.os.Build
 
 class LoginActivity extends AppCompatActivity with AdapterView.OnItemSelectedListener {
@@ -63,9 +55,8 @@ class LoginActivity extends AppCompatActivity with AdapterView.OnItemSelectedLis
       finish()
     } else if (userDb.loggedIn) {
 //      change request askymore-1  -optimize background job,keep alive and decrease power consuming
-//      val startTox = new Intent(getApplicationContext, classOf[ToxService])
-//      getApplicationContext.startService(startTox)
-      ToxService.initToxJobService(this)
+      val startTox = new Intent(getApplicationContext, classOf[ToxService])
+      getApplicationContext.startService(startTox)
       val main = new Intent(getApplicationContext, classOf[MainActivity])
       startActivity(main)
       finish()
@@ -109,9 +100,8 @@ class LoginActivity extends AppCompatActivity with AdapterView.OnItemSelectedLis
         val details = userDb.getUserDetails(account)
         State.login(account, this)
 //      change request askymore-1  -optimize background job,keep alive and decrease power consuming
-//        val startTox = new Intent(getApplicationContext, classOf[ToxService])
-//        getApplicationContext.startService(startTox)
-        ToxService.initToxJobService(this)
+        val startTox = new Intent(getApplicationContext, classOf[ToxService])
+        getApplicationContext.startService(startTox)
         val main = new Intent(getApplicationContext, classOf[MainActivity])
         startActivity(main)
         finish()

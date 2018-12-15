@@ -37,6 +37,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
 
 
     <!--this may get the app banned from google play :-(-->
@@ -51,6 +52,7 @@
         android:smallScreens="true" />
 
     <application
+        android:name="chat.tox.antox.ApplicationContext"
         android:allowBackup="false"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
@@ -70,13 +72,6 @@
             android:name="chat.tox.antox.tox.ToxService"
             android:exported="false"
             android:label="ToxService" />
-        <service
-            android:name="chat.tox.antox.tox.ToxJobService"
-            android:exported="false"
-            android:enabled="true"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:label="ToxJobService" />
-
         <receiver android:name="chat.tox.antox.utils.BootReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

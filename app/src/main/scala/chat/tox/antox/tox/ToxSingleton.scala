@@ -39,6 +39,8 @@ object ToxSingleton {
 
   private var dhtNodes = Seq[DhtNode]()
 
+  var bootstrapped = false
+
   def interval: Int = {
     Math.min(State.transfers.interval, tox.interval)
   }
@@ -91,7 +93,6 @@ object ToxSingleton {
     AntoxLog.debug("Trying to bootstrap", TAG)
     AntoxLog.debug("Current nodes: " + dhtNodes.mkString("|"), TAG)
 
-    var bootstrapped = false
     val loop = new Breaks;
     loop.breakable {
       for (i <- dhtNodes.indices) {

@@ -253,8 +253,7 @@ class SettingsActivity extends BetterPreferenceActivity with Preference.OnPrefer
       val service = new Intent(this, classOf[ToxService])
       this.stopService(service)
 //      change request askymore-1  -optimize background job,keep alive and decrease power consuming
-      ToxService.initToxJobService(this)
-//      this.startService(service)
+      this.startService(service)
     }
   }
 
