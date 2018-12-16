@@ -1,9 +1,11 @@
 package chat.tox.antox.tox
 
 import android.app.Service
-import android.content.{Intent, SharedPreferences}
+import android.content.Intent
 import android.os.IBinder
 import android.preference.PreferenceManager
+import android.support.v4.app.NotificationCompat
+import chat.tox.antox.R
 import chat.tox.antox.av.CallService
 import chat.tox.antox.callbacks.{AntoxOnSelfConnectionStatusCallback, ToxCallbackListener, ToxavCallbackListener}
 import chat.tox.antox.utils.AntoxLog
@@ -12,36 +14,37 @@ import rx.lang.scala.schedulers.AndroidMainThreadScheduler
 import rx.lang.scala.{Observable, Subscription}
 
 import scala.concurrent.duration._
-import android.support.v4.app.NotificationCompat
-import chat.tox.antox.{ApplicationContext, R}
 
-class ToxService extends Service{
-  private val FOREGROUND_ID = 313399
+class ToxService extends Service {
+private val FOREGROUND_ID = 313399
   private var serviceThread: Thread = _
-  private var bootThread: Thread = _
+
   private var keepRunning: Boolean = true
-  private val bgIterateInterval = 5 * 1000 //in ms
-  private val connectionCheckInterval = 10 * 1000 //in ms
-  private val reconnectionIntervalSeconds = 60 //in second
+
+  private val connectionCheckInterval = 10000 //in ms
+
+  private val reconnectionIntervalSeconds = 60
+
   private var callService: CallService = _
-  private var thisService :ToxService = _
-  private var preferences :SharedPreferences = _
-  private var toxCallbackListener:ToxCallbackListener = _
 
   override def onCreate() {
     if (!ToxSingleton.isInited) {
       ToxSingleton.initTox(getApplicationContext)
       AntoxLog.debug("Initting ToxSingleton")
     }
+
     keepRunning = true
-    thisService = this
-    preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext)
-    toxCallbackListener = new ToxCallbackListener(thisService)
+    val thisService = this
 
     val start = new Runnable() {
 
-      override  def run() {
+      override def run() {
+        val preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext)
+        //change request askymore-1   give up video and audio
+        val toxCallbackListener = new ToxCallbackListener(thisService)
+
         var reconnection: Subscription = null
+
         val connectionSubscription = AntoxOnSelfConnectionStatusCallback.connectionStatusSubject
           .observeOn(AndroidMainThreadScheduler())
           .distinctUntilChanged
@@ -61,69 +64,42 @@ class ToxService extends Service{
               AntoxLog.debug(s"Tox disconnected. Scheduled reconnection every $reconnectionIntervalSeconds seconds")
             }
           })
-        retrieve()
+
+        while (keepRunning) {
+          if (!ToxSingleton.isToxConnected(preferences, thisService)) {
+            try {
+              Thread.sleep(connectionCheckInterval)
+            } catch {
+              case e: Exception =>
+            }
+          } else {
+            try {
+              //change request askymore-1   give up video and audio
+              ToxSingleton.tox.iterate(toxCallbackListener)
+              Thread.sleep(ToxSingleton.interval)
+            } catch {
+              case e: Exception =>
+                e.printStackTrace()
+            }
+          }
+        }
 
         connectionSubscription.unsubscribe()
       }
     }
+
     serviceThread = new Thread(start)
     serviceThread.start()
-
-
-    val bootPeriodic = new Runnable() {
-      override  def run(): Unit = {
-        while (keepRunning) {
-          Thread.sleep(600*1000)
-          if (ToxSingleton.isInited)
-            ToxSingleton.bootstrap(getApplicationContext)
-        }
-      }
-    }
-    bootThread = new Thread(bootPeriodic)
-    bootThread.start()
-  }
-
-  def retrieve(): Unit =  {
-    while (keepRunning) {
-      if (!ToxSingleton.isToxConnected(preferences, thisService)) {
-        try {
-          Thread.sleep(connectionCheckInterval)
-        } catch {
-          case e:InterruptedException =>
-            AntoxLog.debug("Retrieve Thread interrupted")
-            throw e
-          case e: Exception =>AntoxLog.debug("Retrieve Thread interrupted")
-        }
-      } else {
-        try {
-          ToxSingleton.tox.iterate(toxCallbackListener)
-          //change request askymore-1   give up video and audio
-          if(ApplicationContext.getInstance(thisService).isAppVisible)
-            Thread.sleep(ToxSingleton.interval)
-          else
-//          onion_client.c  ONION_CONNECTION_SECONDS--the minimum interval is 10s. should compile new libtox4j.so
-            Thread.sleep(bgIterateInterval)
-        }
-        catch {
-          case e:InterruptedException =>
-            AntoxLog.debug("Retrieve Thread interrupted")
-            throw e
-          case e: Exception =>
-            AntoxLog.debug("Retrieve Thread interrupted")
-        }
-      }
-    }
   }
 
   override def onBind(intent: Intent): IBinder = null
 
-  override def onStartCommand(intent: Intent, flags: Int, startId: Int): Int = {
-    super.onStartCommand(intent, flags, startId)
-        val builder=new NotificationCompat.Builder(this)
-        builder.setContentTitle("Antox")
-        builder.setPriority(NotificationCompat.PRIORITY_MIN)
-        builder.setWhen(0)
-        builder.setSmallIcon(R.drawable.ic_action_add)
+  override def onStartCommand(intent: Intent, flags: Int, id: Int): Int = {
+    val builder=new NotificationCompat.Builder(this)
+    builder.setContentTitle("Antox")
+    builder.setPriority(NotificationCompat.PRIORITY_MIN)
+    builder.setWhen(0)
+    builder.setSmallIcon(R.drawable.ic_action_add)
     startForeground(FOREGROUND_ID, builder.build)
     Service.START_STICKY
   }
@@ -133,11 +109,9 @@ class ToxService extends Service{
     keepRunning = false
     serviceThread.interrupt()
     serviceThread.join()
-//    callService.destroy()
     ToxSingleton.save()
     ToxSingleton.isInited = false
     ToxSingleton.tox.close()
     AntoxLog.debug("onDestroy() called for Tox service")
   }
-
 }
