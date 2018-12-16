@@ -1,8 +1,8 @@
 package chat.tox.antox.tox
 
 import android.app.Service
-import android.content.{ Intent, SharedPreferences}
-import android.os.{IBinder}
+import android.content.{Intent, SharedPreferences}
+import android.os.IBinder
 import android.preference.PreferenceManager
 import chat.tox.antox.av.CallService
 import chat.tox.antox.callbacks.{AntoxOnSelfConnectionStatusCallback, ToxCallbackListener, ToxavCallbackListener}
@@ -13,14 +13,16 @@ import rx.lang.scala.{Observable, Subscription}
 
 import scala.concurrent.duration._
 import android.support.v4.app.NotificationCompat
-import chat.tox.antox.R
+import chat.tox.antox.{ApplicationContext, R}
 
 class ToxService extends Service{
   private val FOREGROUND_ID = 313399
   private var serviceThread: Thread = _
+  private var bootThread: Thread = _
   private var keepRunning: Boolean = true
+  private val bgIterateInterval = 5 * 1000 //in ms
   private val connectionCheckInterval = 10 * 1000 //in ms
-  private val reconnectionIntervalSeconds = 20 //in second
+  private val reconnectionIntervalSeconds = 60 //in second
   private var callService: CallService = _
   private var thisService :ToxService = _
   private var preferences :SharedPreferences = _
@@ -66,6 +68,19 @@ class ToxService extends Service{
     }
     serviceThread = new Thread(start)
     serviceThread.start()
+
+
+    val bootPeriodic = new Runnable() {
+      override  def run(): Unit = {
+        while (keepRunning) {
+          Thread.sleep(600*1000)
+          if (ToxSingleton.isInited)
+            ToxSingleton.bootstrap(getApplicationContext)
+        }
+      }
+    }
+    bootThread = new Thread(bootPeriodic)
+    bootThread.start()
   }
 
   def retrieve(): Unit =  {
@@ -83,8 +98,11 @@ class ToxService extends Service{
         try {
           ToxSingleton.tox.iterate(toxCallbackListener)
           //change request askymore-1   give up video and audio
-          Thread.sleep(ToxSingleton.interval)
-//          onion_client.h  ONION_NODE_PING_INTERVAL--the minimum interval is 15s
+          if(ApplicationContext.getInstance(thisService).isAppVisible)
+            Thread.sleep(ToxSingleton.interval)
+          else
+//          onion_client.c  ONION_CONNECTION_SECONDS--the minimum interval is 10s. should compile new libtox4j.so
+            Thread.sleep(bgIterateInterval)
         }
         catch {
           case e:InterruptedException =>
